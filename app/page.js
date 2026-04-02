@@ -25,39 +25,44 @@ export default function Home() {
     if (!formData.height || !formData.waist || !formData.neck) 
       return null
 
-    let bodyfat = 0
+    if (gender === "female" && !formData.hips)
+      return null
+
+    let bodyfat, height, waist, neck, hips
+
 
     if (unit === "imperial") {
       // Convert inches to cm and lbs to kg for the formula
       height = formData.height * 2.54
       waist = formData.waist * 2.54
       neck = formData.neck * 2.54
+      hips = formData.hips ? formData.hips * 2.54 : null
     } else {
       height = formData.height
       waist = formData.waist
       neck = formData.neck
+      hips = formData.hips
     }
 
-    // The formula is the same for both imperial and metric since it's based on ratios, so no need to convert units
     if (gender === "male") {
       bodyfat =  495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450
     } else {
-      bodyfat = 495 / (1.29579 - 0.35004 * Math.log10(waist + formData.hips - neck) + 0.22100 * Math.log10(height)) - 450
+      bodyfat = 495 / (1.29579 - 0.35004 * Math.log10(waist + hips - neck) + 0.22100 * Math.log10(height)) - 450
     }
 
     return Math.round(bodyfat * 10) / 10
   }
 
-  const calculateLBM = (formData, gender) => {
-    const bodyFat = calculateBodyFat(formData, gender)
+  const calculateLBM = (formData, gender, unit) => {
+    const bodyFat = calculateBodyFat(formData, gender, unit)
     if (bodyFat === null) return null
 
     let LBM = formData.weight * (1 - bodyFat / 100)
     return Math.round(LBM * 10) / 10
   }
 
-  const calculateGoal = (formData, gender, targetBodyFat) => {
-    const LBM = calculateLBM(formData, gender)
+  const calculateGoal = (formData, gender, unit, targetBodyFat) => {
+    const LBM = calculateLBM(formData, gender, unit)
     if (LBM === null) return null
 
     const targetWeight = LBM / (1 - targetBodyFat / 100)
@@ -69,9 +74,9 @@ export default function Home() {
     }
   }
   
-  const bodyFat = calculateBodyFat(formData, gender)
-  const LBM = calculateLBM(formData, gender)
-  const goal = calculateGoal(formData, gender, targetBodyFat)
+  const bodyFat = calculateBodyFat(formData, gender, unit)
+  const LBM = calculateLBM(formData, gender, unit)
+  const goal = calculateGoal(formData, gender, unit, targetBodyFat)
     
 
   return (
