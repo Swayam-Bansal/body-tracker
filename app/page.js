@@ -21,23 +21,35 @@ export default function Home() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const calculateBodyFat = (formData, gender) => {
+  const calculateBodyFat = (formData, gender, unit) => {
     if (!formData.height || !formData.waist || !formData.neck) 
       return null
 
     let bodyfat = 0
 
+    if (unit === "imperial") {
+      // Convert inches to cm and lbs to kg for the formula
+      height = formData.height * 2.54
+      waist = formData.waist * 2.54
+      neck = formData.neck * 2.54
+    } else {
+      height = formData.height
+      waist = formData.waist
+      neck = formData.neck
+    }
+
     // The formula is the same for both imperial and metric since it's based on ratios, so no need to convert units
     if (gender === "male") {
-      bodyfat =  495 / (1.0324 - 0.19077 * Math.log10(formData.waist - formData.neck) + 0.15456 * Math.log10(formData.height)) - 450
+      bodyfat =  495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450
     } else {
-      bodyfat = 495 / (1.29579 - 0.35004 * Math.log10(formData.waist + formData.hips - formData.neck) + 0.22100 * Math.log10(formData.height)) - 450
+      bodyfat = 495 / (1.29579 - 0.35004 * Math.log10(waist + formData.hips - neck) + 0.22100 * Math.log10(height)) - 450
     }
 
     return Math.round(bodyfat * 10) / 10
   }
 
   const calculateLBM = (formData, gender) => {
+    const bodyFat = calculateBodyFat(formData, gender)
     if (bodyFat === null) return null
 
     let LBM = formData.weight * (1 - bodyFat / 100)
@@ -45,6 +57,7 @@ export default function Home() {
   }
 
   const calculateGoal = (formData, gender, targetBodyFat) => {
+    const LBM = calculateLBM(formData, gender)
     if (LBM === null) return null
 
     const targetWeight = LBM / (1 - targetBodyFat / 100)
@@ -187,7 +200,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold">Set Your Goals</h2>
             <div className="space-y-4">
               <p className="text-gray-400 text-sm">
-                Your current body fat is <span className="text-white font-semibold">{calculateBodyFat(formData, gender)}%</span>
+                Your current body fat is <span className="text-white font-semibold">{calculateBodyFat(formData, gender, unit)}%</span>
               </p>
               <label className="block text-sm text-gray-400 mb-1">Target Body Fat Percentage</label>
               <input
