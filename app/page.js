@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import StatCard from "./components/StatCard"
 
 export default function Home() {
@@ -77,6 +78,25 @@ export default function Home() {
   const bodyFat = calculateBodyFat(formData, gender, unit)
   const LBM = calculateLBM(formData, gender, unit)
   const goal = calculateGoal(formData, gender, unit, targetBodyFat)
+
+  const saveToLocalStorage = () => {
+    const userBodyData = {
+      ...formData,
+      gender,
+      unit,
+      bodyFat,
+      LBM,
+      targetBodyFat,
+      goal,
+      timestamp: new Date().toISOString(),
+    }
+
+    const existingData = JSON.parse(localStorage.getItem("userBodyData")) || []
+    existingData.push(userBodyData)
+    localStorage.setItem("userBodyData", JSON.stringify(existingData))
+  }
+
+  const router = useRouter()
     
 
   return (
@@ -217,8 +237,11 @@ export default function Home() {
               />
             </div>
             <button
-            onClick={() => setStep(6)}
-            className="w-full border border-gray-700 text-white font-semibold py-3 rounded-xl hover:border-gray-400 transition"
+              onClick={() => {
+                setStep(6)
+                saveToLocalStorage()
+              }}
+              className="w-full border border-gray-700 text-white font-semibold py-3 rounded-xl hover:border-gray-400 transition"
             >
               Results 
             </button>
@@ -238,6 +261,15 @@ export default function Home() {
               <StatCard label="Target Weight" value={goal?.targetWeight + (unit === "metric" ? " kg" : " lbs")} />
               <StatCard label="Weight to Lose" value={goal?.weightToLose + (unit === "metric" ? " kg" : " lbs")} />
             </div>
+
+            <button
+              onClick={() => {
+                router.push("/dashboard")
+              }}
+              className="w-full border border-gray-700 text-white font-semibold py-3 rounded-xl hover:border-gray-400 transition"
+            >
+              Go To Dashboard 
+            </button>
           </div>
         )}
 
